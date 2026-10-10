@@ -1,0 +1,155 @@
+[
+  {
+    "name": "matched-payment",
+    "idempotency_key": "paymatch-demo-v1-matched-payment",
+    "data": {
+      "amount": "2500",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: matched-payment",
+      "metadata[order_id]": "demo-v1-order-001"
+    }
+  },
+  {
+    "name": "unpaid-order-pending-payment",
+    "idempotency_key": "paymatch-demo-v1-unpaid-order-pending-payment",
+    "data": {
+      "amount": "7400",
+      "currency": "usd",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "false",
+      "description": "PayMatch demo: unpaid-order-pending-payment",
+      "metadata[order_id]": "demo-v1-order-003"
+    }
+  },
+  {
+    "name": "amount-mismatch",
+    "idempotency_key": "paymatch-demo-v1-amount-mismatch",
+    "data": {
+      "amount": "9900",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: amount-mismatch",
+      "metadata[order_id]": "demo-v1-order-005"
+    }
+  },
+  {
+    "name": "currency-mismatch",
+    "idempotency_key": "paymatch-demo-v1-currency-mismatch",
+    "data": {
+      "amount": "15900",
+      "currency": "usd",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: currency-mismatch",
+      "metadata[order_id]": "demo-v1-order-006"
+    }
+  },
+  {
+    "name": "multiple-successful-payments-first",
+    "idempotency_key": "paymatch-demo-v1-multiple-successful-payments-first",
+    "data": {
+      "amount": "4800",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: multiple-successful-payments-first",
+      "metadata[order_id]": "demo-v1-order-007"
+    }
+  },
+  {
+    "name": "multiple-successful-payments-second",
+    "idempotency_key": "paymatch-demo-v1-multiple-successful-payments-second",
+    "data": {
+      "amount": "4800",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: multiple-successful-payments-second",
+      "metadata[order_id]": "demo-v1-order-007"
+    }
+  },
+  {
+    "name": "payment-for-cancelled-order",
+    "idempotency_key": "paymatch-demo-v1-payment-for-cancelled-order",
+    "data": {
+      "amount": "6500",
+      "currency": "usd",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: payment-for-cancelled-order",
+      "metadata[order_id]": "demo-v1-order-008"
+    }
+  },
+  {
+    "name": "order-not-marked-paid",
+    "idempotency_key": "paymatch-demo-v1-order-not-marked-paid",
+    "data": {
+      "amount": "2300",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: order-not-marked-paid",
+      "metadata[order_id]": "demo-v1-order-009"
+    }
+  },
+  {
+    "name": "paid-order-pending-payment",
+    "idempotency_key": "paymatch-demo-v1-paid-order-pending-payment",
+    "data": {
+      "amount": "9900",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "false",
+      "description": "PayMatch demo: paid-order-pending-payment",
+      "metadata[order_id]": "demo-v1-order-011"
+    }
+  },
+  {
+    "name": "missing-order-reference",
+    "idempotency_key": "paymatch-demo-v1-missing-order-reference",
+    "data": {
+      "amount": "3600",
+      "currency": "eur",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: missing-order-reference"
+    }
+  },
+  {
+    "name": "order-not-found",
+    "idempotency_key": "paymatch-demo-v1-order-not-found",
+    "data": {
+      "amount": "5200",
+      "currency": "usd",
+      "payment_method": "pm_card_visa",
+      "automatic_payment_methods[enabled]": "true",
+      "automatic_payment_methods[allow_redirects]": "never",
+      "confirm": "true",
+      "description": "PayMatch demo: order-not-found",
+      "metadata[order_id]": "demo-v1-order-999"
+    }
+  }
+]
