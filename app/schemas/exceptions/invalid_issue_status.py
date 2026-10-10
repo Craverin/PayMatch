@@ -1,0 +1,2 @@
+class InvalidIssueStatusError(Exception):
+    pass
