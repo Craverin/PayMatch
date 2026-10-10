@@ -1,0 +1,2 @@
+class SyncAlreadyRunningError(Exception):
+    pass
