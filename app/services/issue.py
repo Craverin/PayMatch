@@ -3,7 +3,6 @@ from typing import Sequence, Literal
 
 from sqlalchemy.orm import Session
 
-from app.database import SessionFactory
 from app.enums import IssueStatus
 from app.models import Issue
 from app.repositories.issues import IssueRepository

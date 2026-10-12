@@ -3,9 +3,8 @@ from typing import Sequence
 from psycopg.errors import UniqueViolation
 from sqlalchemy.exc import IntegrityError
 
-from app.database import SessionFactory
 from app.enums import SyncRunStatus
-from app.models import Payment, SyncRun
+from app.models import SyncRun
 from app.repositories.sync_runs import SyncRunRepository
 from app.schemas.exceptions.sync_already_running import SyncAlreadyRunningError
 from app.schemas.responses.sync_run_response import SyncRunResponse

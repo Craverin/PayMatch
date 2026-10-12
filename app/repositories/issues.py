@@ -1,5 +1,4 @@
 from collections.abc import Sequence
-from datetime import datetime, UTC
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session

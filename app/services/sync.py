@@ -11,12 +11,10 @@ from app.models.order import Order
 from app.models.payment import Payment
 from app.config import HTTP_REQUEST_TIMEOUT, STRIPE_BASE_URL, STRIPE_API_KEY
 from app.enums import SyncRunStatus
-from app.models import SyncRun
 from app.repositories.payments import PaymentRepository
 from app.repositories.sync_runs import SyncRunRepository
 from app.services.issue import IssueService
 from app.services.reconciliation import reconcile
-from app.services.sync_run import SyncRunService
 
 shop_httpx_client = httpx.Client(base_url=SHOP_BASE_URL, timeout=HTTP_REQUEST_TIMEOUT)
 stripe_httpx_client = httpx.Client(

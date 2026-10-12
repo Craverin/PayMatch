@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.enums import IssueStatus
-from app.schemas.detected_issue import IssueType, ConcreteIssue
+from app.schemas.detected_issue import ConcreteIssue
 
 
 class IssueResponse(BaseModel):
