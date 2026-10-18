@@ -1,0 +1,196 @@
+<header class="page-heading">
+  <div>
+    <h1>Orders</h1>
+    <p class="page-description">Shop orders and their reported payment status.</p>
+  </div>
+  <button class="button" (click)="refresh()" [disabled]="list.loading()">
+    <app-icon name="sync" />
+    Refresh
+  </button>
+</header>
+<div class="toolbar">
+  <div class="filters">
+    <label class="field">
+      Order status
+      <select
+        #orderFilter
+        [value]="orderStatus()"
+        (change)="filter('order_status', orderFilter.value)"
+      >
+        <option value="">All statuses</option>
+        <option value="open">Open</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+    </label>
+    <label class="field">
+      Payment status
+      <select
+        #paymentFilter
+        [value]="paymentStatus()"
+        (change)="filter('payment_status', paymentFilter.value)"
+      >
+        <option value="">All statuses</option>
+        <option value="paid">Paid</option>
+        <option value="unpaid">Unpaid</option>
+      </select>
+    </label>
+    <label class="field">
+      Currency
+      <select
+        #currencyFilter
+        [value]="currency()"
+        (change)="filter('currency', currencyFilter.value)"
+      >
+        <option value="">All currencies</option>
+        @for (item of currencies; track item) {
+          <option [value]="item">{{ item }}</option>
+        }
+      </select>
+    </label>
+  </div>
+</div>
+<section class="table-card" aria-label="Orders" [attr.aria-busy]="list.loading()">
+  <div class="table-caption">
+    <strong>Imported shop orders</strong>
+    <span>Amounts in the order currency</span>
+  </div>
+  @if (list.loading()) {
+    <div class="feedback" role="status">
+      <span class="spinner"></span>
+      <p>Loading orders…</p>
+    </div>
+  } @else if (list.error()) {
+    <div class="feedback" role="alert">
+      <strong>Could not load orders</strong>
+      <p>{{ list.error() }}</p>
+      <button class="button" (click)="loadList()">Try again</button>
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="feedback">
+      <app-icon name="orders" />
+      <strong>No orders found</strong>
+      <p>Try another filter, or run a synchronization to import shop orders.</p>
+      <a class="button" routerLink="/sync-runs">Go to sync runs</a>
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Order</th>
+            <th scope="col" class="numeric">Total</th>
+            <th scope="col">Order status</th>
+            <th scope="col">Payment status</th>
+            <th scope="col">Updated in shop</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of rows(); track item.id) {
+            <tr [class.selected]="selectedId() === item.id">
+              <td>
+                <a
+                  class="primary-link mono"
+                  routerLink="."
+                  [queryParams]="{ id: item.id }"
+                  queryParamsHandling="merge"
+                >
+                  {{ item.external_id }}
+                </a>
+                <span class="cell-secondary">Order #{{ item.id }}</span>
+              </td>
+              <td class="numeric">{{ money(item.amount_minor, item.currency) }}</td>
+              <td><app-status-badge [status]="item.order_status" /></td>
+              <td><app-status-badge [status]="item.payment_status" /></td>
+              <td class="date-cell">
+                {{ item.external_updated_at | date: 'dd MMM yyyy' }}
+                <span class="cell-secondary">{{ item.external_updated_at | date: 'HH:mm' }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pagination
+    [offset]="offset()"
+    [count]="rows().length"
+    [hasNext]="hasNext()"
+    [loading]="list.loading()"
+    (changed)="navigate({ offset: $event || null, id: null })"
+  />
+</section>
+<p class="page-note">These records reflect the last successful import from the shop.</p>
+@if (selectedId() !== null) {
+  <app-detail-panel
+    [title]="detail.data()?.external_id ?? 'Order details'"
+    [caption]="'Order #' + selectedId()"
+    (closed)="navigate({ id: null })"
+  >
+    @if (detail.loading()) {
+      <div class="feedback" role="status">
+        <span class="spinner"></span>
+        <p>Loading order…</p>
+      </div>
+    } @else if (detail.error()) {
+      <div class="feedback" role="alert">
+        <strong>Could not load order</strong>
+        <p>{{ detail.error() }}</p>
+        <button class="button" (click)="refresh()">Try again</button>
+      </div>
+    } @else if (detail.data(); as item) {
+      <app-status-badge [status]="item.order_status" />
+      <section class="detail-section">
+        <h3>Order details</h3>
+        <dl class="detail-grid">
+          <div>
+            <dt>Order total</dt>
+            <dd>{{ money(item.amount_minor, item.currency) }}</dd>
+          </div>
+          <div>
+            <dt>Currency</dt>
+            <dd>{{ item.currency }}</dd>
+          </div>
+          <div>
+            <dt>Payment status</dt>
+            <dd><app-status-badge [status]="item.payment_status" /></dd>
+          </div>
+          <div>
+            <dt>Created in shop</dt>
+            <dd>{{ item.external_created_at | date: 'dd MMM yyyy, HH:mm' }}</dd>
+          </div>
+          <div>
+            <dt>Updated in shop</dt>
+            <dd>{{ item.external_updated_at | date: 'dd MMM yyyy, HH:mm' }}</dd>
+          </div>
+        </dl>
+      </section>
+      <section class="detail-section">
+        <h3>Related records</h3>
+        <div class="related-links">
+          <a
+            class="related-link"
+            routerLink="/payments"
+            [queryParams]="{ external_order_id: item.external_id }"
+          >
+            <div>
+              <small>Payments with this order reference</small>
+              <span class="mono">{{ item.external_id }}</span>
+            </div>
+            <app-icon name="arrow" />
+          </a>
+          <a
+            class="related-link"
+            routerLink="/sync-runs"
+            [queryParams]="{ id: item.last_sync_run_id }"
+          >
+            <div>
+              <small>Last imported during</small>
+              Sync #{{ item.last_sync_run_id }}
+            </div>
+            <app-icon name="arrow" />
+          </a>
+        </div>
+      </section>
+    }
+  </app-detail-panel>
+}

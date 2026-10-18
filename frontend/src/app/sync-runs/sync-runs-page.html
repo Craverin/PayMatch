@@ -1,0 +1,198 @@
+<header class="page-heading">
+  <div>
+    <h1>Sync runs</h1>
+    <p class="page-description">Import orders and payments, then reconcile the results.</p>
+  </div>
+  <div class="page-actions">
+    <button class="button" (click)="refresh()" [disabled]="list.loading()">
+      <app-icon name="sync" />
+      Refresh
+    </button>
+    <button
+      class="button button-primary"
+      (click)="start()"
+      [disabled]="starting() || running() || list.loading()"
+    >
+      <app-icon name="sync" />
+      {{ starting() ? 'Starting…' : running() ? 'Sync in progress' : 'Run synchronization' }}
+    </button>
+  </div>
+</header>
+@if (actionError()) {
+  <p class="alert" role="alert">{{ actionError() }}</p>
+}
+<div class="toolbar">
+  <div class="filters">
+    <label class="field">
+      Status
+      <select
+        #statusFilter
+        [value]="status()"
+        (change)="navigate({ status: statusFilter.value || null, offset: null, id: null })"
+      >
+        <option value="">All statuses</option>
+        <option value="running">Running</option>
+        <option value="succeeded">Succeeded</option>
+        <option value="failed">Failed</option>
+      </select>
+    </label>
+  </div>
+</div>
+<section class="table-card" aria-label="Sync runs" [attr.aria-busy]="list.loading()">
+  <div class="table-caption">
+    <strong>Synchronization history</strong>
+    <span>{{ running() ? 'Updating every 4 seconds' : 'Shop + Stripe' }}</span>
+  </div>
+  @if (list.loading() && !list.data()) {
+    <div class="feedback" role="status">
+      <span class="spinner"></span>
+      <p>Loading sync runs…</p>
+    </div>
+  } @else if (list.error()) {
+    <div class="feedback" role="alert">
+      <strong>Could not load sync runs</strong>
+      <p>{{ list.error() }}</p>
+      <button class="button" (click)="loadList()">Try again</button>
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="feedback">
+      <app-icon name="sync" />
+      <strong>No sync runs found</strong>
+      <p>
+        Start a synchronization to import data and check for discrepancies, or change the status
+        filter.
+      </p>
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Run</th>
+            <th scope="col">Status</th>
+            <th scope="col">Started</th>
+            <th scope="col">Finished</th>
+            <th scope="col" class="numeric">Orders</th>
+            <th scope="col" class="numeric">Payments</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of rows(); track item.id) {
+            <tr [class.selected]="selectedId() === item.id">
+              <td>
+                <a
+                  class="primary-link mono"
+                  routerLink="."
+                  [queryParams]="{ id: item.id }"
+                  queryParamsHandling="merge"
+                >
+                  SYNC-{{ item.id }}
+                </a>
+              </td>
+              <td><app-status-badge [status]="item.status" /></td>
+              <td class="date-cell">
+                {{ item.started_at | date: 'dd MMM yyyy' }}
+                <span class="cell-secondary">{{ item.started_at | date: 'HH:mm:ss' }}</span>
+              </td>
+              <td class="date-cell">
+                {{ item.finished_at ? (item.finished_at | date: 'dd MMM yyyy') : '—' }}
+                @if (item.finished_at) {
+                  <span class="cell-secondary">{{ item.finished_at | date: 'HH:mm:ss' }}</span>
+                }
+              </td>
+              <td class="numeric">{{ item.status === 'running' ? '—' : item.orders_imported }}</td>
+              <td class="numeric">
+                {{ item.status === 'running' ? '—' : item.payments_imported }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pagination
+    [offset]="offset()"
+    [count]="rows().length"
+    [hasNext]="hasNext()"
+    [loading]="list.loading()"
+    (changed)="navigate({ offset: $event || null, id: null })"
+  />
+</section>
+<p class="page-note">
+  Import counts are recorded when a run finishes. An active run updates automatically while this
+  page is visible.
+</p>
+@if (selectedId() !== null) {
+  <app-detail-panel
+    [title]="'Sync #' + selectedId()"
+    caption="Synchronization"
+    (closed)="navigate({ id: null })"
+  >
+    @if (detail.loading() && !detail.data()) {
+      <div class="feedback" role="status">
+        <span class="spinner"></span>
+        <p>Loading sync run…</p>
+      </div>
+    } @else if (detail.error()) {
+      <div class="feedback" role="alert">
+        <strong>Could not load sync run</strong>
+        <p>{{ detail.error() }}</p>
+        <button class="button" (click)="refresh()">Try again</button>
+      </div>
+    } @else if (detail.data(); as item) {
+      <app-status-badge [status]="item.status" />
+      <p class="panel-description">
+        @if (item.status === 'running') {
+          Import and reconciliation are in progress. This panel will update automatically.
+        } @else if (item.status === 'succeeded') {
+          Orders and payments were imported and reconciliation completed.
+        } @else {
+          This run did not complete. Review the error below before trying again.
+        }
+      </p>
+      <section class="detail-section">
+        <h3>Run details</h3>
+        <dl class="detail-grid">
+          <div>
+            <dt>Started</dt>
+            <dd>{{ item.started_at | date: 'dd MMM yyyy, HH:mm:ss' }}</dd>
+          </div>
+          <div>
+            <dt>Finished</dt>
+            <dd>
+              {{
+                item.finished_at
+                  ? (item.finished_at | date: 'dd MMM yyyy, HH:mm:ss')
+                  : 'In progress'
+              }}
+            </dd>
+          </div>
+          <div>
+            <dt>Orders imported</dt>
+            <dd>{{ item.status === 'running' ? 'Pending' : item.orders_imported }}</dd>
+          </div>
+          <div>
+            <dt>Payments imported</dt>
+            <dd>{{ item.status === 'running' ? 'Pending' : item.payments_imported }}</dd>
+          </div>
+        </dl>
+      </section>
+      @if (item.error) {
+        <section class="detail-section">
+          <h3>Error</h3>
+          <p class="error-detail">{{ item.error }}</p>
+        </section>
+      }
+      <div class="panel-actions">
+        <a class="button" routerLink="/issues">
+          View current issues
+          <app-icon name="arrow" />
+        </a>
+      </div>
+      <p class="panel-note">
+        The Issues page shows the current reconciliation state, not a historical snapshot of this
+        run.
+      </p>
+    }
+  </app-detail-panel>
+}

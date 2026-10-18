@@ -1,0 +1,39 @@
+<a class="skip-link" href="#main-content">Skip to content</a>
+<aside class="sidebar">
+  <a class="brand" routerLink="/issues" aria-label="PayMatch home">
+    <span class="brand-mark" aria-hidden="true">
+      <span></span>
+      <span></span>
+    </span>
+    PayMatch
+  </a>
+  <div class="workspace-label">Reconciliation workspace</div>
+  <nav aria-label="Main navigation">
+    <a routerLink="/issues" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <app-icon name="issues" />
+      Issues
+    </a>
+    <a routerLink="/orders" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <app-icon name="orders" />
+      Orders
+    </a>
+    <a routerLink="/payments" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <app-icon name="payments" />
+      Payments
+    </a>
+    <a routerLink="/sync-runs" routerLinkActive="active" ariaCurrentWhenActive="page">
+      <app-icon name="sync" />
+      Sync runs
+    </a>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="source-mark">S</span>
+    <div>
+      <strong>Shop & Stripe</strong>
+      <span>Order and payment reconciliation</span>
+    </div>
+  </div>
+</aside>
+<main id="main-content" tabindex="-1">
+  <router-outlet />
+</main>

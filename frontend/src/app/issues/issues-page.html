@@ -1,0 +1,271 @@
+<!--suppress ALL -->
+<header class="page-heading">
+  <div>
+    <h1>Issues</h1>
+    <p class="page-description">Review discrepancies between your orders and payments.</p>
+  </div>
+  <div class="page-actions">
+    <button class="button" type="button" (click)="refresh()" [disabled]="list.loading()">
+      <app-icon name="sync" />
+      Refresh
+    </button>
+    <a class="button button-primary" routerLink="/sync-runs">
+      Sync runs
+      <app-icon name="arrow" />
+    </a>
+  </div>
+</header>
+<div class="toolbar">
+  <nav class="status-tabs" aria-label="Issue status">
+    @for (option of statusOptions; track option) {
+      <a
+        routerLink="."
+        [queryParams]="{ status: option, offset: null, id: null }"
+        queryParamsHandling="merge"
+        [class.active]="status() === option"
+        [attr.aria-current]="status() === option ? 'page' : null"
+      >
+        {{ option === 'all' ? 'All issues' : option.charAt(0).toUpperCase() + option.slice(1) }}
+      </a>
+    }
+  </nav>
+  <label class="field">
+    Issue type
+    <select #typeSelect [value]="type()" (change)="setType(typeSelect.value)">
+      <option value="">All types</option>
+      @for (option of typeOptions; track option.value) {
+        <option [value]="option.value">{{ option.label }}</option>
+      }
+    </select>
+  </label>
+</div>
+<section class="table-card" aria-label="Reconciliation issues" [attr.aria-busy]="list.loading()">
+  <div class="table-caption">
+    <strong>{{ status() === 'open' ? 'Needs your attention' : 'Reconciliation issues' }}</strong>
+    <span>Most recently updated first</span>
+  </div>
+
+  @if (list.loading()) {
+    <div class="feedback" role="status">
+      <span class="spinner"></span>
+      <p>Loading issues…</p>
+    </div>
+  } @else if (list.error()) {
+    <div class="feedback" role="alert">
+      <strong>Could not load issues</strong>
+      <p>{{ list.error() }}</p>
+      <button class="button" (click)="loadList()">Try again</button>
+    </div>
+  } @else if (rows().length === 0) {
+    <div class="feedback">
+      <app-icon name="check" />
+      <strong>{{ status() === 'open' ? 'No open issues in this view' : 'No issues found' }}</strong>
+      <p>Try another filter, or run a synchronization to check the latest imported data.</p>
+      <a routerLink="/sync-runs" class="button">Go to sync runs</a>
+    </div>
+  } @else {
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col">Issue</th>
+            <th scope="col">Status</th>
+            <th scope="col">Order</th>
+            <th scope="col">Payment</th>
+            <th scope="col">Updated</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of rows(); track item.id) {
+            <tr [class.selected]="selectedId() === item.id">
+              <td>
+                <a
+                  class="primary-link"
+                  routerLink="."
+                  [queryParams]="{ id: item.id }"
+                  queryParamsHandling="merge"
+                >
+                  {{ issueTypes[item.issue.type].title }}
+                </a>
+                <span class="cell-secondary mono">ISS-{{ item.id }}</span>
+              </td>
+              <td><app-status-badge [status]="item.status" /></td>
+              <td>
+                @if (item.order_id !== null) {
+                  <a
+                    class="record-link mono"
+                    routerLink="/orders"
+                    [queryParams]="{ id: item.order_id }"
+                  >
+                    {{ orderReference(item) }}
+                  </a>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td>
+                @if (item.payment_id !== null) {
+                  <a
+                    class="record-link mono"
+                    routerLink="/payments"
+                    [queryParams]="{ id: item.payment_id }"
+                  >
+                    {{ paymentReference(item) }}
+                  </a>
+                } @else {
+                  <span class="muted">—</span>
+                }
+              </td>
+              <td class="date-cell">
+                {{ item.updated_at | date: 'dd MMM yyyy' }}
+                <span class="cell-secondary">{{ item.updated_at | date: 'HH:mm' }}</span>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+  <app-pagination
+    [offset]="offset()"
+    [count]="rows().length"
+    [hasNext]="hasNext()"
+    [loading]="list.loading()"
+    (changed)="setOffset($event)"
+  />
+</section>
+<p class="page-note">
+  Issues are resolved automatically when a subsequent reconciliation no longer detects the
+  discrepancy.
+</p>
+@if (selectedId() !== null) {
+  <app-detail-panel
+    [title]="detail.data() ? issueTypes[detail.data()!.issue.type].title : 'Issue details'"
+    [caption]="'Issue ISS-' + selectedId()"
+    (closed)="close()"
+  >
+    @if (detail.loading()) {
+      <div class="feedback" role="status">
+        <span class="spinner"></span>
+        <p>Loading issue…</p>
+      </div>
+    } @else if (detail.error()) {
+      <div class="feedback" role="alert">
+        <strong>Could not load issue</strong>
+        <p>{{ detail.error() }}</p>
+        <button class="button" (click)="refresh()">Try again</button>
+      </div>
+    } @else if (detail.data(); as item) {
+      <app-status-badge [status]="item.status" />
+      <p class="panel-description">{{ issueTypes[item.issue.type].description }}</p>
+      <section class="detail-section">
+        <h3>What we found</h3>
+        <dl class="detail-grid">
+          @for (field of fields(); track $index) {
+            <div>
+              <dt>{{ field.label }}</dt>
+              <dd>{{ field.value }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+      @if (
+        item.order_id !== null ||
+        item.payment_id !== null ||
+        item.issue.type === 'MULTIPLE_SUCCESSFUL_PAYMENTS'
+      ) {
+        <section class="detail-section">
+          <h3>Related records</h3>
+          <div class="related-links">
+            @if (item.order_id !== null) {
+              <a class="related-link" routerLink="/orders" [queryParams]="{ id: item.order_id }">
+                <div>
+                  <small>Order</small>
+                  <span class="mono">{{ orderReference(item) }}</span>
+                </div>
+                <app-icon name="arrow" />
+              </a>
+            }
+            @if (item.payment_id !== null) {
+              <a
+                class="related-link"
+                routerLink="/payments"
+                [queryParams]="{ id: item.payment_id }"
+              >
+                <div>
+                  <small>Payment</small>
+                  <span class="mono">{{ paymentReference(item) }}</span>
+                </div>
+                <app-icon name="arrow" />
+              </a>
+            }
+            @if (item.issue.type === 'MULTIPLE_SUCCESSFUL_PAYMENTS') {
+              <a
+                class="related-link"
+                routerLink="/payments"
+                [queryParams]="{ external_order_id: item.issue.details.order_id }"
+              >
+                <div>
+                  <small>Payments for this order</small>
+                  <span class="mono">{{ item.issue.details.order_id }}</span>
+                </div>
+                <app-icon name="arrow" />
+              </a>
+            }
+          </div>
+        </section>
+      }
+      <section class="detail-section">
+        <h3>Activity</h3>
+        <dl class="detail-grid">
+          <div>
+            <dt>First detected</dt>
+            <dd>{{ item.created_at | date: 'dd MMM yyyy, HH:mm' }}</dd>
+          </div>
+          <div>
+            <dt>Last updated</dt>
+            <dd>{{ item.updated_at | date: 'dd MMM yyyy, HH:mm' }}</dd>
+          </div>
+          @if (item.resolved_at) {
+            <div>
+              <dt>Resolved</dt>
+              <dd>{{ item.resolved_at | date: 'dd MMM yyyy, HH:mm' }}</dd>
+            </div>
+          }
+        </dl>
+      </section>
+      <div class="panel-actions">
+        @if (item.status !== 'resolved') {
+          <button
+            class="button"
+            [class.button-primary]="item.status === 'ignored'"
+            [disabled]="saving()"
+            (click)="setStatus(item.status === 'open' ? 'ignored' : 'open')"
+          >
+            @if (saving()) {
+              Saving...
+            }
+
+            @else if (item.status === 'open') {
+              Ignore issue
+            }
+
+            @else if (item.status === 'ignored') {
+              Reopen issue
+            }
+          </button>
+        }
+        @if (item.status === 'resolved') {
+          <span class="muted">Resolved by reconciliation</span>
+        }
+      </div>
+      @if (actionError()) {
+        <p class="alert" role="alert">{{ actionError() }}</p>
+      }
+      <p class="panel-note">
+        Ignoring an issue only changes its status in PayMatch. The order and payment remain
+        unchanged.
+      </p>
+    }
+  </app-detail-panel>
+}
